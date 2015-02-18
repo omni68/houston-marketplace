@@ -25,13 +25,13 @@ window.fbAsyncInit = function() {
 function onGetLoginStatusResponse(response) {
     if(response.status === 'connected') {
         console.log('Logged in.');
-        window.App = new App();
+        App.init();
     }
     else {
         console.log('Not logged in.');
         FB.login(FB._onNotAuthenticated);
     }
-};
+}
 
 function onNotAuthenticated(response) {
     if (response.authResponse) {
@@ -39,8 +39,8 @@ function onNotAuthenticated(response) {
          FB.api('/me', function(response) {
               console.log('Good to see you, ' + response.name + '.');
          });
-         window.App = new App();
+         App.init();
     } else {
         console.log('User cancelled login or did not fully authorize.');
     }
-};
+}
