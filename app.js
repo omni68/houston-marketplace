@@ -76,11 +76,8 @@ var Post = React.createClass({
 	render: function() {
 		return  (
 			<div className="post">
-				<div className="message">{this.props.data.message}</div>
-				<div className="poster">{this.props.data.from.name}</div>
-				<div className="created">{this.props.data.created_time}</div>
-				<div className="updated">{this.props.data.updated_time}</div>
-				<Comments data={this.props.data.comments ? this.props.data.comments.data : []} />
+				<div className="poster">{this.props.data.from.name}</div><div className="message">{this.props.data.message}</div>
+				<Comments data={this.props.data.comments ? this.props.data.comments.data : []} /><br/>
 			</div>
 		);
 	}
@@ -104,8 +101,7 @@ var Comment = React.createClass({
 	render: function() {
 		return  (
 			<div className="comment">
-				<div className="message">{this.props.data.message}</div>
-				<div className="commenter">{this.props.data.from.name}</div>
+				<div className="commenter">{this.props.data.from.name}</div><div className="message">{this.props.data.message}</div><br/>
 			</div>
 		);
 	}

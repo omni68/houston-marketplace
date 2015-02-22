@@ -1,0 +1,23 @@
+.poster, .commenter {
+	display: inline-block;
+	float: left;
+	font-weight: bold;
+}
+
+.message {
+	display: inline-block;
+	float: left;
+	font-style: italic;
+	padding-left: 10px;
+}
+.message:before {
+	content: "-";
+}
+
+.commenter {
+	padding-left: 20px;
+}
+
+.comments {
+	clear: both;
+}
