@@ -44,7 +44,7 @@ var PostView = React.createClass({
 			dataType: 'json',
 			success: function(data) {
 				if(this.isMounted()) {
-					data.data = this.formatDates(data.data);
+					data.data = this.formatPosts(data.data);
 					this.setState({data: data});
 				}
 			}.bind(this),
@@ -53,22 +53,23 @@ var PostView = React.createClass({
 			}.bind(this)
 		});
 	},
-	formatDates: function(data) {
-		for(var i in data) {
-			if(data[i].created_time) {
-				data[i].created_time = this.formatDate(data[i].created_time);	
-				data[i].message = this.tagMessage(data[i].message);
-			}
-			if(data[i].comments && data[i].comments.data) {
-				for(var j in data[i].comments.data) {
-					if(data[i].comments.data[j].created_time) {
-						data[i].comments.data[j].created_time = this.formatDate(data[i].comments.data[j].created_time);	
-						data[i].comments.data[j].message = this.tagMessage(data[i].comments.data[j].message);
-					}
+	formatPosts: function(posts) {
+		for(var i in posts) {
+			// post formatting
+			posts[i].created_time = this.formatDate(posts[i].created_time);
+			posts[i].message = this.tagMessage(posts[i].message);
+			posts[i].interested = true;
+
+			if(posts[i].comments && posts[i].comments.data) {
+				for(var j in posts[i].comments.data) {
+					// comment formatting
+					posts[i].comments.data[j].created_time = this.formatDate(posts[i].comments.data[j].created_time);	
+					posts[i].comments.data[j].message = this.tagMessage(posts[i].comments.data[j].message);
 				}
 			}
+
 		}
-		return data;
+		return posts;
 	},
 	tagMessage: function(msg) {
 		msg = msg.trim();
@@ -108,23 +109,49 @@ var PostView = React.createClass({
 		return date.getMonth()+1 + "/" + date.getDate() + "/" + date.getFullYear() + "  " + strTime;
 	},
 	getInitialState: function() {
-		return { data: { data: [], paging: {} } };
+		return { data: { data: [], paging: {} }, filter: { sold: false } };
 	},
 	componentDidMount: function() {
 		this.loadPosts();
 	},
-	handleClick: function(event) {
-		// FB.logout(function(response) {
-		//   	window.location.reload();
-		// });
+	handleFilterSold: function(event) {
+		this.setState({ filter: { sold: !this.state.filter.sold } });
+	},
+	hasPostSold: function(post) {
+		var hasPostSold = false;
+
+		if(this.state.filter.sold && post.comments) {
+			for(var i in post.comments.data) {
+				var soldMatch = post.comments.data[i].message.match(" sold ");
+				var pmMatch = post.comments.data[i].message.match(" pm ");
+				if(soldMatch != null || pmMatch != null) {
+					hasPostSold = true;
+				}
+			}
+		}
+
+		return hasPostSold;
+	},
+	setPostAsUninterested: function(post) {
+		var postIndex = _.findIndex(this.state.data.data, function(item) {
+			return item.id == post.id;
+		});
+		this.state.data.data[postIndex].interested = false;
+		var posts = this.state.data.data
+		this.setState({ data: { data: posts } });
 	},
 	render: function() {
+		var self = this;
+		var posts = _.filter(this.state.data.data, function(post) {
+			return !self.hasPostSold(post) && post.interested;
+		});
 		return (
-		      <div id="post-view">
-		        	<h1>Post View</h1>
-		        	<a onClick={this.handleClick}>logout</a>
-		        	<PostList posts={this.state.data.data} />
-		      </div>
+			<div id="post-view">
+				<h1>Post View</h1>
+				<div>#posts: {posts.length}</div>
+				<a onClick={this.handleFilterSold}>sold filter</a>
+				<PostList posts={posts} setPostAsUninterested={this.setPostAsUninterested}/>
+			</div>
 	    );
 	}
 });
@@ -144,9 +171,10 @@ var PostList = React.createClass({
 
 	},
 	render: function() {
+		var self = this;
 		var posts = this.props.posts.map(function(post) {
 			return (
-				<Post data={post} key={post.id}/>
+				<Post data={post} key={post.id} setPostAsUninterested={self.props.setPostAsUninterested}/>
 			);
 	    });
 
@@ -161,11 +189,15 @@ var PostList = React.createClass({
 });
 
 var Post = React.createClass({
+	setPostAsUninterested: function(post) {
+		this.props.setPostAsUninterested(post);
+	},
 	render: function() {
 		return  (
 			<div className="post">
 				<div className="poster">{this.props.data.from.name} ({this.props.data.created_time})</div><div className="message">{this.props.data.message}</div>
 				<Comments post={this.props.data} data={this.props.data.comments ? this.props.data.comments.data : []} /><br/>
+				<button type="button" onClick={this.setPostAsUninterested.bind(this, this.props.data)}>not interested</button>
 			</div>
 		);
 	}
