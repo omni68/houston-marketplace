@@ -7,7 +7,7 @@ window.fbAsyncInit = function() {
 
     /* Function assignments */
     FB._onGetLoginStatusResponse = onGetLoginStatusResponse;
-    FB._onNotAuthenticated = onNotAuthenticated;
+    FB._onLogin = onLogin;
 
     // 
     FB.getLoginStatus(FB._onGetLoginStatusResponse);
@@ -25,20 +25,19 @@ window.fbAsyncInit = function() {
 function onGetLoginStatusResponse(response) {
     if(response.status === 'connected') {
         console.log('Logged in.');
+        App.authResponse = response.authResponse;
         App.init();
     }
     else {
         console.log('Not logged in.');
-        FB.login(FB._onNotAuthenticated);
+        FB.login(FB._onLogin,{scope:'user_groups'});
     }
 }
 
-function onNotAuthenticated(response) {
+function onLogin(response) {
     if (response.authResponse) {
-         console.log('Welcome!  Fetching your information.... ');
-         FB.api('/me', function(response) {
-              console.log('Good to see you, ' + response.name + '.');
-         });
+         console.log('Logged in.');
+         App.authResponse = response.authResponse;
          App.init();
     } else {
         console.log('User cancelled login or did not fully authorize.');
