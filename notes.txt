@@ -1,0 +1,32 @@
+main view
+	header
+		settings (flyout)
+			user name
+			logout
+			show statuses (available, pending/existing interest, sold)
+				status (on/off)
+			show categories
+				category (on/off)					
+		ajax spinner
+	posts list
+		post
+			status
+			pic
+			category
+			$
+			description
+			location
+			swipe left
+				hide post or category
+			is selected (swiped or clicked)
+		expanded view
+			details
+			pics (scroll left for more, swipe up for next post)
+
+	footer
+		sort
+			$
+			date
+		search
+			category & description
+

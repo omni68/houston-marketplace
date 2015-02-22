@@ -17,24 +17,30 @@ var App = {
 		'ppu': 'porch pickup',
 		'bump': 'bring up my post',
 		'pass': 'no longer interested',
-		'admin': 'administrator message',
-		'ppu': 'pending pickup',
+		'admin': 'administrator',
 		'sold': 'sold'
+	},
+	postTags: {
+		'ppu': 'porch pickup'
+	},
+	commentTags: {
+		'ppu': 'pending pickup'
 	},
 	fullMsgTags: {
 		'.': 'bring up my post'
-	},
-	illegalTags: {
-		'obo': 'or best offer'
 	}
 	// description
+		// clothes, shoes, art, tools, electronics, furniture, purses, cooking-ware, dining-ware, toys, recreation, jewelry, decor, other
 	// condition
+		// in box and/or with tags
+		// brand new or like new or good or fair
 	// price or tradable
 	// pickup location
 	// photo
 	// web link to item
 	// cross-posted?
 	// buyer must respond within 24 hours of PM
+
 };
 
 var PostView = React.createClass({
@@ -57,43 +63,33 @@ var PostView = React.createClass({
 		for(var i in posts) {
 			// post formatting
 			posts[i].created_time = this.formatDate(posts[i].created_time);
-			posts[i].message = this.tagMessage(posts[i].message);
+			posts[i].tags = this.tagPostOrComment(posts[i]);
 			posts[i].interested = true;
 
 			if(posts[i].comments && posts[i].comments.data) {
 				for(var j in posts[i].comments.data) {
 					// comment formatting
 					posts[i].comments.data[j].created_time = this.formatDate(posts[i].comments.data[j].created_time);	
-					posts[i].comments.data[j].message = this.tagMessage(posts[i].comments.data[j].message);
+					posts[i].comments.data[j].tags = this.tagPostOrComment(posts[i].comments.data[j]);
 				}
 			}
 
 		}
 		return posts;
 	},
-	tagMessage: function(msg) {
-		msg = msg.trim();
-		var stopProcessing = false;
+	tagPostOrComment: function(item) {
+		var tags = [];
+		var msg = item.message.trim();
 
 		if(msg) {
-			for(var i in App.fullMsgTags) {
-				if(msg == i) {
-					msg = i + " [" + App.fullMsgTags[i] + "]";
-					stopProcessing = true;
-				}
-			}
-			if(!stopProcessing) {
-				for(var i in App.illegalTags) {
-					var pattern = new RegExp(" " + i + " " + "|" + App.illegalTags[i] + " ", 'gi');
-					msg = msg.replace(pattern, " " + i + " [illegal] ");
-				}
-				for(var i in App.tags) {
-					var pattern = new RegExp(" " + i + " ", 'gi');
-					msg = msg.replace(pattern, " " + i + " [" + App.tags[i] + "]" + " ");
+			for(var i in App.tags) {
+				var pattern = new RegExp("[^a-z0-9]" + i + "[^a-z0-9]|^" + i + "[^a-z0-9]|[^a-z0-9]" + App.tags[i] + "[^a-z0-9]|^" + App.tags[i] + "[^a-z0-9]","gi");
+				if(msg.match(pattern) != null && tags.indexOf(i) == -1) {
+					tags.push(i);
 				}
 			}
 		}
-		return msg;
+		return tags;
 	},
 	formatDate: function(date) {
 		if(!(date instanceof Date)) {
@@ -123,7 +119,7 @@ var PostView = React.createClass({
 		if(this.state.filter.sold && post.comments) {
 			for(var i in post.comments.data) {
 				var soldMatch = post.comments.data[i].message.match(" sold ");
-				var pmMatch = post.comments.data[i].message.match(" pm ");
+				var pmMatch = post.comments.data[i].message.match("/pm/gi");
 				if(soldMatch != null || pmMatch != null) {
 					hasPostSold = true;
 				}
@@ -193,11 +189,20 @@ var Post = React.createClass({
 		this.props.setPostAsUninterested(post);
 	},
 	render: function() {
+		var tags = this.props.data.tags.map(function(tag) {
+			return (
+				<Tag tag={tag}/>
+			);
+	    });
+
 		return  (
 			<div className="post">
-				<div className="poster">{this.props.data.from.name} ({this.props.data.created_time})</div><div className="message">{this.props.data.message}</div>
-				<Comments post={this.props.data} data={this.props.data.comments ? this.props.data.comments.data : []} /><br/>
+				<div className="poster">{this.props.data.from.name} ({this.props.data.created_time})</div>
+				<div className="message">{this.props.data.message}</div>
+				<Comments post={this.props.data} data={this.props.data.comments ? this.props.data.comments.data : []} />
 				<button type="button" onClick={this.setPostAsUninterested.bind(this, this.props.data)}>not interested</button>
+				<div className="tags">{tags}</div>
+				<br/>
 			</div>
 		);
 	}
@@ -224,6 +229,14 @@ var Comment = React.createClass({
 			<div className="comment">
 				<div className="commenter">{this.props.data.from.name} ({this.props.data.created_time})</div><div className="message">{this.props.data.message}</div><br/>
 			</div>
+		);
+	}
+});
+
+var Tag = React.createClass({
+	render: function() {
+		return  (
+			<div className="tag">{this.props.tag} - {App.tags[this.props.tag]}</div>
 		);
 	}
 });
