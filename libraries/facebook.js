@@ -30,7 +30,7 @@ function onGetLoginStatusResponse(response) {
     }
     else {
         console.log('Not logged in.');
-        FB.login(FB._onLogin,{scope:'user_groups'});
+        FB.login(FB._onLogin);
     }
 }
 
