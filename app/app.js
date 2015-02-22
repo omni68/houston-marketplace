@@ -65,6 +65,7 @@ var PostView = React.createClass({
 			posts[i].created_time = this.formatDate(posts[i].created_time);
 			posts[i].tags = this.tagPostOrComment(posts[i]);
 			posts[i].interested = true;
+			posts[i].status = this.getPostStatus(posts[i]);
 
 			if(posts[i].comments && posts[i].comments.data) {
 				for(var j in posts[i].comments.data) {
@@ -76,6 +77,9 @@ var PostView = React.createClass({
 
 		}
 		return posts;
+	},
+	getPostStatus: function(post) {
+		return this.state.statuses.available;
 	},
 	tagPostOrComment: function(item) {
 		var tags = [];
@@ -105,7 +109,21 @@ var PostView = React.createClass({
 		return date.getMonth()+1 + "/" + date.getDate() + "/" + date.getFullYear() + "  " + strTime;
 	},
 	getInitialState: function() {
-		return { data: { data: [], paging: {} }, filter: { sold: false } };
+		return { 
+			data: { data: [], paging: {} }, 
+			filter: { sold: false }, 
+			settings: [
+				{ id: 0, name: 'User Name' },
+				{ id: 1, name: 'Statuses' },
+				{ id: 2, name: 'Categories' },
+				{ id: 3, name: 'Logout' }
+			],
+			statuses: {
+				available: "available",
+				pending: "pending",
+				sold: "sold"
+			} 
+		};
 	},
 	componentDidMount: function() {
 		this.loadPosts();
@@ -143,100 +161,10 @@ var PostView = React.createClass({
 		});
 		return (
 			<div id="post-view">
-				<h1>Post View</h1>
-				<div>#posts: {posts.length}</div>
-				<a onClick={this.handleFilterSold}>sold filter</a>
-				<PostList posts={posts} setPostAsUninterested={this.setPostAsUninterested}/>
+				<Header settings={this.state.settings} posts={posts}></Header>
+				<Posts posts={posts} statuses={this.state.statuses} setPostAsUninterested={this.setPostAsUninterested}/>
+				<Footer></Footer>
 			</div>
 	    );
-	}
-});
-
-var PostList = React.createClass({
-	handleClick: function(event) {
-		FB.api(
-		    "/537024639700594/feed",
-		    { access_token: App.authResponse.access_token },
-		    function (response) {
-		      if (response && !response.error) {
-		        /* handle the result */
-		      }
-		      console.log(response);
-		    }
-		);
-
-	},
-	render: function() {
-		var self = this;
-		var posts = this.props.posts.map(function(post) {
-			return (
-				<Post data={post} key={post.id} setPostAsUninterested={self.props.setPostAsUninterested}/>
-			);
-	    });
-
-	    return (
-	    	<div>
-	    		<h2>Post List</h2>
-	    		<button onClick={this.handleClick}>Refresh Feed</button>
-		      	<div>{posts}</div>
-	      	</div>
-	    );
-	}
-});
-
-var Post = React.createClass({
-	setPostAsUninterested: function(post) {
-		this.props.setPostAsUninterested(post);
-	},
-	render: function() {
-		var tags = this.props.data.tags.map(function(tag) {
-			return (
-				<Tag tag={tag}/>
-			);
-	    });
-
-		return  (
-			<div className="post">
-				<div className="poster">{this.props.data.from.name} ({this.props.data.created_time})</div>
-				<div className="message">{this.props.data.message}</div>
-				<Comments post={this.props.data} data={this.props.data.comments ? this.props.data.comments.data : []} />
-				<button type="button" onClick={this.setPostAsUninterested.bind(this, this.props.data)}>not interested</button>
-				<div className="tags">{tags}</div>
-				<br/>
-			</div>
-		);
-	}
-});
-
-var Comments = React.createClass({
-	render: function() {
-		var post = this.props.post;
-		var comments = this.props.data.map(function(data) {
-			return (
-				<Comment post={post} data={data} key={data.id}/>
-			);
-	    });
-
-		return  (
-			<div className="comments">{comments}</div>
-		);
-	}
-});
-
-var Comment = React.createClass({
-	render: function() {
-		return  (
-			<div className="comment">
-				<div className="commenter">{this.props.data.from.name} ({this.props.data.created_time})</div><div className="message">{this.props.data.message}</div><br/>
-			</div>
-		);
-	}
-});
-
-var Tag = React.createClass({
-	render: function() {
-		return  (
-			<div className="tag">{this.props.tag} - {App.tags[this.props.tag]}</div>
-		);
 	}
 });
