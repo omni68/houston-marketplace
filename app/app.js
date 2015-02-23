@@ -66,3 +66,5 @@ var AppView = React.createClass({
 		);
 	}
 });
+
+App.init();
