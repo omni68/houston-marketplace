@@ -1,0 +1,17 @@
+.commenter {
+	display: inline-block;
+	float: left;
+	font-weight: bold;
+	padding-left: 20px;
+}
+
+.comment .message {
+	display: inline-block;
+	float: left;
+	font-style: italic;
+	padding-left: 10px;
+}
+
+.comments {
+	clear: both;
+}

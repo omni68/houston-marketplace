@@ -1,0 +1,39 @@
+#posts-view {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	bottom: 0;
+	background-color: white;
+	transition: left 0.3s ease, right 0.3s ease; /* todo needs prefixes */
+}
+#posts-view.flyout {
+	left: 200px;
+	right: -200px;
+}
+
+.poster {
+	display: inline-block;
+	float: left;
+	font-weight: bold;
+}
+
+#posts {
+	overflow-y: scroll;
+	max-height: calc(100% - 100px);
+}
+
+.post .message {
+	display: inline-block;
+	float: left;
+	font-style: italic;
+	padding-left: 10px;
+}
+
+.post:first-child {
+	border-top: none;
+}
+.post {
+	border-top: 1px solid gray;
+	padding: 20px 10px;
+}
