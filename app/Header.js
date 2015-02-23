@@ -3,10 +3,8 @@ var Header = React.createClass({
 		return (
 			<div id="header">
 				<button onClick={this.props.toggleFlyout}>MENU</button>
-				<span>Westbury/Myerland Trading</span>
-				<span>({this.props.posts.length})</span>
+				<h2>Westbury/Myerland Trading</h2>
 				<AjaxLoading></AjaxLoading>
-				<a onClick={this.handleFilterSold}>sold filter</a>
 			</div>
 		);
 	}
