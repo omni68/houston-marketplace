@@ -1,6 +1,5 @@
 body {
-	max-width: 640px;
-	max-height: 768px;
+	max-width: 1024px;
 	margin: auto;
 	overflow: hidden;
 }

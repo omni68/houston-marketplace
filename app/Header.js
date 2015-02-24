@@ -2,7 +2,13 @@ var Header = React.createClass({
 	render: function() {
 		return (
 			<div id="header">
-				<button onClick={this.props.toggleFlyout}>MENU</button>
+				<div id="settings-icon">
+					<a onClick={this.props.toggleFlyout}>
+						<span></span>
+						<span></span>
+						<span></span>
+					</a>
+				</div>
 				<h2>Westbury/Myerland Trading</h2>
 				<AjaxLoading></AjaxLoading>
 			</div>

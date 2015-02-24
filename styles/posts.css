@@ -10,7 +10,7 @@
 #posts-view.flyout {
 	left: 200px;
 	right: -200px;
-	box-shadow: -3px 0 5px -3px black; /* todo needs prefixes */
+	box-shadow: 0px 0px 3px 0px black /* todo needs prefixes */
 }
 
 .poster {
