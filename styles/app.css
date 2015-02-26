@@ -2,6 +2,7 @@ body {
 	max-width: 1024px;
 	margin: auto;
 	overflow: hidden;
+  width: 320px;
 }
 
 #app-view {

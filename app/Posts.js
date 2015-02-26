@@ -21,6 +21,9 @@ var PostsView = React.createClass({
 			posts[i].tags = this.tagPostOrComment(posts[i]);
 			posts[i].interested = true;
 			posts[i].status = this.getPostStatus(posts[i]);
+			posts[i].category = this.getPostCategory(posts[i]);
+			posts[i].cost = this.getPostCost(posts[i]);
+			posts[i].location = this.getPostLocation(posts[i]);
 
 			if(posts[i].comments && posts[i].comments.data) {
 				for(var j in posts[i].comments.data) {
@@ -32,6 +35,18 @@ var PostsView = React.createClass({
 
 		}
 		return posts;
+	},
+	getPostLocation: function(post) {
+		var location = "myerland";
+		return location;
+	},
+	getPostCost: function(post) {
+		var cost = "free";
+		return cost;
+	},
+	getPostCategory: function(post) {
+		var categories = {};
+		return "category";
 	},
 	getPostStatus: function(post) {
 		return this.props.statuses.available;
@@ -127,7 +142,7 @@ var Posts = React.createClass({
 		var self = this;
 		var posts = this.props.posts.map(function(post) {
 			return (
-				<Post data={post} key={post.id} statuses={self.props.statuses} setPostAsUninterested={self.props.setPostAsUninterested}/>
+				<Post post={post} key={post.id} statuses={self.props.statuses} setPostAsUninterested={self.props.setPostAsUninterested}/>
 			);
 	    });
 
@@ -145,9 +160,9 @@ var Post = React.createClass({
 		var cx = React.addons.classSet;
 		var classes = cx({
 			'post': true,
-			'status-available': this.props.data.status == this.props.statuses.available,
-			'status-pending': this.props.data.status == this.props.statuses.pending,
-			'status-sold': this.props.data.status == this.props.statuses.sold
+			'status-available': this.props.post.status == this.props.statuses.available,
+			'status-pending': this.props.post.status == this.props.statuses.pending,
+			'status-sold': this.props.post.status == this.props.statuses.sold
 		});
 		return classes;
 	},
@@ -156,12 +171,17 @@ var Post = React.createClass({
 
 		return  (
 			<div className={postClasses}>
-				<div className="status-indicator"></div>
-				<img src={this.props.data.picture}/>
-				<div className="poster">{this.props.data.from.name} ({this.props.data.created_time})</div>
-				<div className="message">{this.props.data.message}</div>
-				<Comments post={this.props.data} data={this.props.data.comments ? this.props.data.comments.data : []} />
-				<button type="button" onClick={this.setPostAsUninterested.bind(this, this.props.data)}>not interested</button>
+				<div className="details">
+					<div className="time">{this.props.post.created_time}</div>
+					<div className="status">{this.props.post.status}</div>
+					<div className="cost">{this.props.post.cost}</div>
+					<div className="category">{this.props.post.category}</div>
+					<div className="location">{this.props.post.location}</div>
+					<div className="poster">{this.props.post.from.name}</div>
+				</div>
+				<img src={this.props.post.picture}/>
+				<img src={this.props.post.picture}/>
+				<img src={this.props.post.picture}/>
 			</div>
 		);
 	}

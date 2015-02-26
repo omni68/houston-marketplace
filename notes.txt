@@ -30,3 +30,8 @@ main view
 		search
 			category & description
 
+
+<div className="poster">{this.props.post.from.name} ({this.props.post.created_time})</div>
+<div className="message">{this.props.post.message}</div>
+<Comments post={this.props.post} data={this.props.post.comments ? this.props.post.comments.post : []} />
+<button type="button" onClick={this.setPostAsUninterested.bind(this, this.props.post)}>not interested</button>
