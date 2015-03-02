@@ -1,5 +1,6 @@
 var PostsView = React.createClass({
 	loadPosts: function() {
+		debugger;
 		$.ajax({
 			url: "/group-feed.json",
 			dataType: 'json',
@@ -14,6 +15,9 @@ var PostsView = React.createClass({
 			}.bind(this)
 		});
 	},
+	componentWillMount: function() {
+		this.loadPosts();
+	},
 	formatPosts: function(posts) {
 		for(var i in posts) {
 			// post formatting
@@ -25,13 +29,19 @@ var PostsView = React.createClass({
 			posts[i].cost = this.getPostCost(posts[i]);
 			posts[i].location = this.getPostLocation(posts[i]);
 
+			// comment formatting
+			var interestedBuyers = [];
 			if(posts[i].comments && posts[i].comments.data) {
 				for(var j in posts[i].comments.data) {
-					// comment formatting
 					posts[i].comments.data[j].created_time = this.formatDate(posts[i].comments.data[j].created_time);	
 					posts[i].comments.data[j].tags = this.tagPostOrComment(posts[i].comments.data[j]);
+					if(posts[i].comments.data[j].tags.indexOf("int") != -1) {
+						interestedBuyers.push(posts[i].comments.data[j].from);
+					}
 				}
 			}
+
+			posts[i].interested_buyers = interestedBuyers;
 
 		}
 		return posts;
@@ -57,6 +67,7 @@ var PostsView = React.createClass({
 
 		if(msg) {
 			for(var i in App.tags) {
+				// todo: regex is wrong
 				var pattern = new RegExp("[^a-z0-9]" + i + "[^a-z0-9]|^" + i + "[^a-z0-9]|[^a-z0-9]" + App.tags[i] + "[^a-z0-9]|^" + App.tags[i] + "[^a-z0-9]","gi");
 				if(msg.match(pattern) != null && tags.indexOf(i) == -1) {
 					tags.push(i);
@@ -83,9 +94,6 @@ var PostsView = React.createClass({
 			data: { data: [], paging: {} }, 
 			filter: { sold: false }
 		};
-	},
-	componentDidMount: function() {
-		this.loadPosts();
 	},
 	handleFilterSold: function(event) {
 		this.setState({ filter: { sold: !this.state.filter.sold } });
@@ -178,6 +186,7 @@ var Post = React.createClass({
 					<div className="category">{this.props.post.category}</div>
 					<div className="location">{this.props.post.location}</div>
 					<div className="poster">{this.props.post.from.name}</div>
+					<div className="interested-buyers">#int: {this.props.post.interested_buyers.length}</div>
 				</div>
 				<img src={this.props.post.picture}/>
 				<img src={this.props.post.picture}/>
