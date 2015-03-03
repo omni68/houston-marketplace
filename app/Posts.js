@@ -1,6 +1,6 @@
 var PostsView = React.createClass({
 	loadPosts: function() {
-		debugger;
+		//debugger;
 		$.ajax({
 			url: "/group-feed.json",
 			dataType: 'json',
@@ -67,8 +67,7 @@ var PostsView = React.createClass({
 
 		if(msg) {
 			for(var i in App.tags) {
-				// todo: regex is wrong
-				var pattern = new RegExp("[^a-z0-9]" + i + "[^a-z0-9]|^" + i + "[^a-z0-9]|[^a-z0-9]" + App.tags[i] + "[^a-z0-9]|^" + App.tags[i] + "[^a-z0-9]","gi");
+				var pattern = new RegExp("\b" + i + "\b|\b" + App.tags[i] + "\b","gi");
 				if(msg.match(pattern) != null && tags.indexOf(i) == -1) {
 					tags.push(i);
 				}
@@ -194,4 +193,59 @@ var Post = React.createClass({
 			</div>
 		);
 	}
+});
+
+
+var teams = [];
+
+function getPlayer(playerId) {
+	var player = {};
+	var popup = window.open('http://espn.go.com/mens-college-basketball/player/_/id/'  + playerId, '_blank');
+	popup.onload = function() {
+        console.log(playerId);
+    }; 
+	return player;
+}
+
+function getRoster(teamId) {
+	var roster = [];
+	if(teamId == 399 || teamId == 2066) {
+		var popup = window.open('http://espn.go.com/ncb/teams/roster?teamId='  + teamId, '_blank');
+		popup.onload = function() {
+	        setTimeout(function(){ 
+	        	$('tr:not(".stathead"):not(".colhead")', popup.document).each(function() {
+	        		var playerUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/player\/_\/id\/(\w+)\//;
+					var playerId = parseInt($(this).find('td:eq(1)').find('a').attr('href').match(playerUrlPattern)[1]);
+	        		var nameCol = $(this).find('td:eq(1)').text();
+	        		var heightCol = $(this).find('td:eq(3)').text().split("-");
+	        		var weightCol = $(this).find('td:eq(4)').text();
+	        		var classCol = $(this).find('td:eq(5)').text();
+
+					var player = {
+						"name": nameCol,
+						"height": (parseInt(heightCol[0]) * 12) + parseInt(heightCol[1]),
+						"weight": parseInt(weightCol),
+						"class": classCol
+					};
+
+					$.extend(player, getPlayer(playerId, nameCol.toLowerCase().replace(" ","-")));
+					roster.push(player);
+				});
+	        }, 2000);
+	    }; 
+	}
+	return roster;
+}
+ 
+$('li h5 a.bi').each(function(){ 
+	var teamUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/team\/_\/id\/(\w+)\//;
+	var teamId = parseInt($(this).attr('href').match(teamUrlPattern)[1]);
+
+	var team = { 
+		"id": teamId,
+		"name": $(this).text(),
+		"roster": getRoster(teamId)
+	};
+
+	teams.push(team);
 });

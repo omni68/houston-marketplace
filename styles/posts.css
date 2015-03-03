@@ -29,7 +29,8 @@
 .post {
 	border-top: 1px solid gray;
 	padding: 10px;
-	overflow: hidden;
+	overflow: auto;
+	overflow-y: hidden;
 	white-space: nowrap;
 }
 .post img {
@@ -43,4 +44,9 @@
 	height: 200px;
 	vertical-align: top;
 	margin-right: 10px;
+}
+
+@media only screen and (max-width: 767px), only screen and (max-device-width: 767px) {
+	overflow-x: scroll; /* has to be scroll, not auto */
+  	-webkit-overflow-scrolling: touch;
 }
