@@ -198,54 +198,106 @@ var Post = React.createClass({
 
 var teams = [];
 
-function getPlayer(playerId) {
-	var player = {};
+function getPlayerStats(playerId) {
+	var defer = new $.Deferred();
+	var stats = {};
 	var popup = window.open('http://espn.go.com/mens-college-basketball/player/_/id/'  + playerId, '_blank');
 	popup.onload = function() {
-        console.log(playerId);
+		setTimeout(function() {
+			var $perGameStats = $('.mod-player-stats:first tr:eq(2) td');
+	    	stats.mpg = $perGameStats.eq(2).text();
+	    	stats.fgm = $perGameStats.eq(3).text().split("-")[0];
+	    	stats.fga = $perGameStats.eq(3).text().split("-")[1];
+	    	stats.tpm = $perGameStats.eq(5).text().split("-")[0];
+	    	stats.tpa = $perGameStats.eq(5).text().split("-")[1];
+	    	stats.ftm = $perGameStats.eq(7).text().split("-")[0];
+	    	stats.fta = $perGameStats.eq(7).text().split("-")[1];
+	    	stats.rpg = $perGameStats.eq(9).text();
+	    	stats.apg = $perGameStats.eq(10).text();
+	    	stats.bpg = $perGameStats.eq(11).text();
+	    	stats.spg = $perGameStats.eq(12).text();
+	    	stats.pfpg = $perGameStats.eq(13).text();
+	    	stats.topg = $perGameStats.eq(14).text();
+	    	stats.ppg = $perGameStats.eq(15).text();
+
+	    	popup.close();
+	    	defer.resolve(stats);
+    	}, 1000);
     }; 
-	return player;
+	return defer.promise();
 }
+
+var teams = [];
 
 function getRoster(teamId) {
+	var defer = new $.Deferred();
 	var roster = [];
-	if(teamId == 399 || teamId == 2066) {
+	if(teamId == 399) {
 		var popup = window.open('http://espn.go.com/ncb/teams/roster?teamId='  + teamId, '_blank');
 		popup.onload = function() {
-	        setTimeout(function(){ 
-	        	$('tr:not(".stathead"):not(".colhead")', popup.document).each(function() {
-	        		var playerUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/player\/_\/id\/(\w+)\//;
-					var playerId = parseInt($(this).find('td:eq(1)').find('a').attr('href').match(playerUrlPattern)[1]);
-	        		var nameCol = $(this).find('td:eq(1)').text();
-	        		var heightCol = $(this).find('td:eq(3)').text().split("-");
-	        		var weightCol = $(this).find('td:eq(4)').text();
-	        		var classCol = $(this).find('td:eq(5)').text();
+        	$('tr:not(".stathead"):not(".colhead")', popup.document).each(function() {
+        		var playerUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/player\/_\/id\/(\w+)\//;
+				var playerId = parseInt($(this).find('td:eq(1)').find('a').attr('href').match(playerUrlPattern)[1]);
+        		var nameCol = $(this).find('td:eq(1)').text();
+        		var positionCol = $(this).find('td:eq(2)').text();
+        		var heightCol = $(this).find('td:eq(3)').text().split("-");
+        		var weightCol = $(this).find('td:eq(4)').text();
+        		var classCol = $(this).find('td:eq(5)').text();
 
-					var player = {
-						"name": nameCol,
-						"height": (parseInt(heightCol[0]) * 12) + parseInt(heightCol[1]),
-						"weight": parseInt(weightCol),
-						"class": classCol
-					};
+				var player = {
+					"id": playerId,
+					"name": nameCol,
+					"position": positionCol,
+					"height": (parseInt(heightCol[0]) * 12) + parseInt(heightCol[1]),
+					"weight": parseInt(weightCol),
+					"class": classCol
+				};
 
-					$.extend(player, getPlayer(playerId, nameCol.toLowerCase().replace(" ","-")));
+				$.when(getPlayerStats(playerId)).then(function(data) {
+					player.stats = data;
 					roster.push(player);
 				});
-	        }, 2000);
+			});
+
+			popup.close();
+			defer.resolve(roster);
 	    }; 
 	}
-	return roster;
+	return defer.promise();
 }
- 
-$('li h5 a.bi').each(function(){ 
-	var teamUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/team\/_\/id\/(\w+)\//;
-	var teamId = parseInt($(this).attr('href').match(teamUrlPattern)[1]);
 
-	var team = { 
-		"id": teamId,
-		"name": $(this).text(),
-		"roster": getRoster(teamId)
-	};
+function scrape() {
+	console.log('starting scrape of ncaam teams...');
+	$('li h5 a.bi').each(function(i){ 
+		var teamUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/team\/_\/id\/(\w+)\//;
+		var teamId = parseInt($(this).attr('href').match(teamUrlPattern)[1]);
 
-	teams.push(team);
-});
+		var team = { 
+			"id": teamId,
+			"name": $(this).text()
+		};
+
+		$.when(getRoster(teamId)).then(function(data) {
+			team.roster = data;
+			teams.push(team);
+		});
+	});
+	console.log('...done collecting ncaam teams data');
+}
+
+function saveJSONToFile(teams) {
+	console.log('saving json to file...');
+	
+	var json = JSON.stringify(teams);
+	var blob = new Blob([json], {type: "application/json"});
+	var url  = URL.createObjectURL(blob);
+
+	var a = document.createElement('a');
+	a.download    = "ncaam_teams_" + new Date().getTime() + ".json";
+	a.href        = url;
+	a.id = "download-link";
+
+	$('body').prepend(a);
+	$('#download-link').text(a.download);
+	console.log('...saved json as', a.download);
+}
