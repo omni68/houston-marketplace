@@ -203,39 +203,35 @@ function getPlayerStats(playerId) {
 	var stats = {};
 	var popup = window.open('http://espn.go.com/mens-college-basketball/player/_/id/'  + playerId, '_blank');
 	popup.onload = function() {
-		setTimeout(function() {
-			var $perGameStats = $('.mod-player-stats:first tr:eq(2) td');
-	    	stats.mpg = $perGameStats.eq(2).text();
-	    	stats.fgm = $perGameStats.eq(3).text().split("-")[0];
-	    	stats.fga = $perGameStats.eq(3).text().split("-")[1];
-	    	stats.tpm = $perGameStats.eq(5).text().split("-")[0];
-	    	stats.tpa = $perGameStats.eq(5).text().split("-")[1];
-	    	stats.ftm = $perGameStats.eq(7).text().split("-")[0];
-	    	stats.fta = $perGameStats.eq(7).text().split("-")[1];
-	    	stats.rpg = $perGameStats.eq(9).text();
-	    	stats.apg = $perGameStats.eq(10).text();
-	    	stats.bpg = $perGameStats.eq(11).text();
-	    	stats.spg = $perGameStats.eq(12).text();
-	    	stats.pfpg = $perGameStats.eq(13).text();
-	    	stats.topg = $perGameStats.eq(14).text();
-	    	stats.ppg = $perGameStats.eq(15).text();
+		var $perGameStats = $('.mod-player-stats:first tr:eq(2) td');
+    	stats.mpg = $perGameStats.eq(2).text();
+    	stats.fgm = $perGameStats.eq(3).text().split("-")[0];
+    	stats.fga = $perGameStats.eq(3).text().split("-")[1];
+    	stats.tpm = $perGameStats.eq(5).text().split("-")[0];
+    	stats.tpa = $perGameStats.eq(5).text().split("-")[1];
+    	stats.ftm = $perGameStats.eq(7).text().split("-")[0];
+    	stats.fta = $perGameStats.eq(7).text().split("-")[1];
+    	stats.rpg = $perGameStats.eq(9).text();
+    	stats.apg = $perGameStats.eq(10).text();
+    	stats.bpg = $perGameStats.eq(11).text();
+    	stats.spg = $perGameStats.eq(12).text();
+    	stats.pfpg = $perGameStats.eq(13).text();
+    	stats.topg = $perGameStats.eq(14).text();
+    	stats.ppg = $perGameStats.eq(15).text();
 
-	    	popup.close();
-	    	defer.resolve(stats);
-    	}, 1000);
+    	popup.close();
+    	defer.resolve(stats);
     }; 
 	return defer.promise();
 }
 
-var teams = [];
-
 function getRoster(teamId) {
-	var defer = new $.Deferred();
+	var promises = [];
 	var roster = [];
 	if(teamId == 399) {
 		var popup = window.open('http://espn.go.com/ncb/teams/roster?teamId='  + teamId, '_blank');
 		popup.onload = function() {
-        	$('tr:not(".stathead"):not(".colhead")', popup.document).each(function() {
+        	$.each($('tr:not(".stathead"):not(".colhead")', popup.document), function() {
         		var playerUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/player\/_\/id\/(\w+)\//;
 				var playerId = parseInt($(this).find('td:eq(1)').find('a').attr('href').match(playerUrlPattern)[1]);
         		var nameCol = $(this).find('td:eq(1)').text();
@@ -263,27 +259,27 @@ function getRoster(teamId) {
 			defer.resolve(roster);
 	    }; 
 	}
-	return defer.promise();
+	return $.when.apply(undefined, promises).promise();
 }
 
-function scrape() {
-	console.log('starting scrape of ncaam teams...');
-	$('li h5 a.bi').each(function(i){ 
-		var teamUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/team\/_\/id\/(\w+)\//;
-		var teamId = parseInt($(this).attr('href').match(teamUrlPattern)[1]);
+// function scrape() {
+// 	console.log('starting scrape of ncaam teams...');
+// 	$('li h5 a.bi').each(function(i){ 
+// 		var teamUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/team\/_\/id\/(\w+)\//;
+// 		var teamId = parseInt($(this).attr('href').match(teamUrlPattern)[1]);
 
-		var team = { 
-			"id": teamId,
-			"name": $(this).text()
-		};
+// 		var team = { 
+// 			"id": teamId,
+// 			"name": $(this).text()
+// 		};
 
-		$.when(getRoster(teamId)).then(function(data) {
-			team.roster = data;
-			teams.push(team);
-		});
-	});
-	console.log('...done collecting ncaam teams data');
-}
+// 		$.when(getRoster(teamId)).then(function(data) {
+// 			team.roster = data;
+// 			teams.push(team);
+// 		});
+// 	});
+// 	console.log('...done collecting ncaam teams data');
+// }
 
 function saveJSONToFile(teams) {
 	console.log('saving json to file...');
@@ -300,4 +296,28 @@ function saveJSONToFile(teams) {
 	$('body').prepend(a);
 	$('#download-link').text(a.download);
 	console.log('...saved json as', a.download);
+}
+
+var process = function() {
+     var promises = [];
+
+     $.each($('li h5 a.bi'), function() {
+     	var def = new $.Deferred();
+     	var teamUrlPattern = /http:\/\/espn\.go\.com\/mens-college-basketball\/team\/_\/id\/(\w+)\//;
+		var teamId = parseInt($(this).attr('href').match(teamUrlPattern)[1]);
+
+		var team = { 
+			"id": teamId,
+			"name": $(this).text()
+		};
+
+		$.when(getRoster(teamId)).then(function(data) {
+			team.roster = data;
+			teams.push(team);
+			def.resolve(data);
+		});
+         promises.push(def);
+     });
+
+     return $.when.apply(undefined, promises).promise();
 }
